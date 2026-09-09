@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>終末地基質規劃器 - 累加測試</title>
-  <!-- 引入 Tailwind CSS 確保外觀樣式一模一樣 -->
+  <!-- 引入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 p-4 md:p-8 font-sans">
@@ -13,10 +13,10 @@
     <!-- 標題與說明 -->
     <div class="border-b border-slate-200 pb-4">
       <h1 class="text-xl font-bold text-slate-900">基質屬性規劃面板</h1>
-      <p class="text-xs text-slate-500 mt-1">點擊下方標籤動態累加，資料自動同步至 LocalStorage，重整頁面不清除。</p>
+      <p class="text-xs text-slate-500 mt-1">點擊標籤切換選取狀態（已選按鈕反藍），資料自動同步至 LocalStorage。</p>
     </div>
 
-    <!-- 1. 當前已規劃結果展示橫條（依照你指定的樣式打造） -->
+    <!-- 1. 當前已規劃結果展示橫條 -->
     <div>
       <div class="flex items-center justify-between mb-2">
         <span class="text-xs font-semibold text-slate-600">目前選擇方案：</span>
@@ -24,21 +24,21 @@
       </div>
 
       <div id="attribute-bar" class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs text-slate-600 bg-slate-200/70 border border-slate-300 rounded-md px-3 py-2 min-h-[38px]">
-        <!-- 動態渲染在此 -->
+        <!-- 動態渲染展示條 -->
       </div>
     </div>
 
-    <!-- 2. 點擊篩選與累加按鈕區 -->
+    <!-- 2. 按鈕選取區（點選後變色） -->
     <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4">
       <!-- 基礎屬性 -->
       <div>
         <div class="text-xs font-bold text-slate-500 mb-2">基礎屬性</div>
         <div class="flex flex-wrap gap-2">
-          <button onclick="toggleItem('base', '意志提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 意志提升</button>
-          <button onclick="toggleItem('base', '主能力提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 主能力提升</button>
-          <button onclick="toggleItem('base', '敏捷提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 敏捷提升</button>
-          <button onclick="toggleItem('base', '力量提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 力量提升</button>
-          <button onclick="toggleItem('base', '智識提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 智識提升</button>
+          <button data-cat="base" data-name="意志提升" onclick="toggleItem('base', '意志提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">意志提升</button>
+          <button data-cat="base" data-name="主能力提升" onclick="toggleItem('base', '主能力提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">主能力提升</button>
+          <button data-cat="base" data-name="敏捷提升" onclick="toggleItem('base', '敏捷提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">敏捷提升</button>
+          <button data-cat="base" data-name="力量提升" onclick="toggleItem('base', '力量提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">力量提升</button>
+          <button data-cat="base" data-name="智識提升" onclick="toggleItem('base', '智識提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">智識提升</button>
         </div>
       </div>
 
@@ -46,22 +46,26 @@
       <div>
         <div class="text-xs font-bold text-slate-500 mb-2">附加屬性</div>
         <div class="flex flex-wrap gap-2">
-          <button onclick="toggleItem('extra', '攻擊提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 攻擊提升</button>
-          <button onclick="toggleItem('extra', '暴擊率提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 暴擊率提升</button>
-          <button onclick="toggleItem('extra', '灼熱傷害提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 灼熱傷害提升</button>
-          <button onclick="toggleItem('extra', '寒冷傷害提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 寒冷傷害提升</button>
-          <button onclick="toggleItem('extra', '電磁傷害提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 電磁傷害提升</button>
-          <button onclick="toggleItem('extra', '物理傷害提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 物理傷害提升</button>
+          <button data-cat="extra" data-name="攻擊提升" onclick="toggleItem('extra', '攻擊提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">攻擊提升</button>
+          <button data-cat="extra" data-name="暴擊率提升" onclick="toggleItem('extra', '暴擊率提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">暴擊率提升</button>
+          <button data-cat="extra" data-name="灼熱傷害提升" onclick="toggleItem('extra', '灼熱傷害提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">灼熱傷害提升</button>
+          <button data-cat="extra" data-name="寒冷傷害提升" onclick="toggleItem('extra', '寒冷傷害提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">寒冷傷害提升</button>
+          <button data-cat="extra" data-name="電磁傷害提升" onclick="toggleItem('extra', '電磁傷害提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">電磁傷害提升</button>
+          <button data-cat="extra" data-name="物理傷害提升" onclick="toggleItem('extra', '物理傷害提升')" class="attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer">物理傷害提升</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 3. 資料處理與持久化邏輯 -->
+  <!-- 3. 資料處理與按鈕高亮邏輯 -->
   <script>
     const STORAGE_KEY = 'CEP_ESSENCE_PLANNER_DATA';
 
-    // 從 LocalStorage 載入資料（若無紀錄則預設為空）
+    // 樣式定義：未選取 vs 已選取高亮
+    const STYLE_UNSELECTED = 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300';
+    const STYLE_SELECTED = 'bg-sky-600 text-white border-sky-600 shadow-sm hover:bg-sky-700 font-medium';
+
+    // 從 LocalStorage 載入資料
     let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
       base: [],
       extra: []
@@ -69,52 +73,63 @@
 
     // 渲染函式
     function render() {
-      // 每次變更即時寫入 LocalStorage
+      // 1. 寫入 LocalStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 
+      // 2. 渲染上方展示橫條
       const container = document.getElementById('attribute-bar');
 
-      // 基礎屬性標籤處理
       const baseHtml = state.base.length > 0
-        ? state.base.map((item, idx) => `
+        ? state.base.map((item) => `
             <span>
               <strong class="text-slate-900 font-medium">${item}</strong>
-              <button onclick="removeItem('base', ${idx})" class="text-slate-400 hover:text-rose-500 ml-1 cursor-pointer font-bold">✕</button>
-              ${idx < state.base.length - 1 ? '<span class="text-slate-400">, </span>' : ''}
+              <button onclick="removeItem('base', '${item}')" class="text-slate-400 hover:text-rose-500 ml-1 cursor-pointer font-bold">✕</button>
             </span>
-          `).join('')
+          `).join(', ')
         : '<span class="text-slate-400">未選擇</span>';
 
-      // 附加屬性標籤處理
       const extraHtml = state.extra.length > 0
-        ? state.extra.map((item, idx) => `
+        ? state.extra.map((item) => `
             <span>
               <strong class="text-slate-900 font-medium">${item}</strong>
-              <button onclick="removeItem('extra', ${idx})" class="text-slate-400 hover:text-rose-500 ml-1 cursor-pointer font-bold">✕</button>
-              ${idx < state.extra.length - 1 ? '<span class="text-slate-400">, </span>' : ''}
+              <button onclick="removeItem('extra', '${item}')" class="text-slate-400 hover:text-rose-500 ml-1 cursor-pointer font-bold">✕</button>
             </span>
-          `).join('')
+          `).join(', ')
         : '<span class="text-slate-400">未選擇</span>';
 
-      // 組成與 end.canmoe 一致的排版
       container.innerHTML = `
         <span>基礎屬性: [ ${baseHtml} ]</span>
         <span class="text-slate-400/50">|</span>
         <span>附加屬性: ${extraHtml}</span>
       `;
+
+      // 3. 更新所有按鈕的選取變色狀態
+      document.querySelectorAll('.attr-btn').forEach(btn => {
+        const cat = btn.getAttribute('data-cat');
+        const name = btn.getAttribute('data-name');
+        const isSelected = state[cat].includes(name);
+
+        // 先清空兩個樣式
+        btn.className = `attr-btn px-3 py-1.5 text-xs rounded border transition-colors cursor-pointer ${
+          isSelected ? STYLE_SELECTED : STYLE_UNSELECTED
+        }`;
+      });
     }
 
-    // 累加項目（點擊加入）
+    // 點擊切換：沒選中就加入（變色），已選中就取消（恢復）
     function toggleItem(category, name) {
-      if (!state[category].includes(name)) {
-        state[category].push(name);
-        render();
+      const idx = state[category].indexOf(name);
+      if (idx === -1) {
+        state[category].push(name); // 選取加入
+      } else {
+        state[category].splice(idx, 1); // 再次點擊取消
       }
+      render();
     }
 
-    // 刪除單個項目
-    function removeItem(category, index) {
-      state[category].splice(index, 1);
+    // 上方橫條點擊 ✕ 刪除
+    function removeItem(category, name) {
+      state[category] = state[category].filter(item => item !== name);
       render();
     }
 
