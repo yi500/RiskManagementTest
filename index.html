@@ -3,134 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>風寶分類帽</title>
+  <title>風險管理規劃器</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* 模擬原版暗色調背景與邊框變數 */
-    :root {
-      --background: 20 14.3% 4.1%;
-      --foreground: 60 9.1% 97.8%;
-      --border: 20 5.9% 25%;
-    }
-  </style>
 </head>
 <body class="bg-neutral-950 text-neutral-100 p-4 md:p-8 font-sans min-h-screen">
 
-  <div class="max-w-6xl mx-auto space-y-6">
+  <div class="max-w-4xl mx-auto space-y-6">
     <!-- 頂部標題區 -->
     <div class="border-b border-neutral-800 pb-4 flex justify-between items-end">
       <div>
-        <h1 class="text-xl font-bold text-neutral-50 tracking-wider">選哲你的學院</h1>
-        <p class="text-xs text-neutral-400 mt-1">技能方格切換選取（已選狀態外框亮金並打勾），狀態自動儲存至 LocalStorage。</p>
+        <h1 class="text-xl font-bold text-neutral-50 tracking-wider">風險管理能力規劃器</h1>
+        <p class="text-xs text-neutral-400 mt-1">點選課程方格進行配置，選取數量將即時評估整體防禦成熟度。</p>
       </div>
       <button onclick="clearAll()" class="text-xs text-rose-400 hover:text-rose-300 underline cursor-pointer">全部清空</button>
     </div>
 
-    <!-- 1. 當前已規劃結果展示橫條 -->
-    <div>
-      <div class="text-xs font-medium text-neutral-400 mb-2">已選技能方格：</div>
+    <!-- 1. 動態評語與清單展示橫條 -->
+    <div class="space-y-2">
+      <!-- 依選取數量動態變化的句子 -->
+      <div id="status-comment-box" class="p-3 rounded-lg border text-xs transition-all duration-300">
+        <!-- 動態句子渲染在此 -->
+      </div>
+
+      <!-- 已選技能標籤列 -->
+      <div class="text-xs font-medium text-neutral-400">已配置課程模組：</div>
       <div id="weapon-display-bar" class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 min-h-[44px]">
-        <!-- 動態渲染展示標籤 -->
+        <!-- 動態渲染清單 -->
       </div>
     </div>
 
-    <!-- 2. 武器九宮格選擇區 -->
+    <!-- 2. 10 格風險管理課程（全部預設 6 星） -->
     <div>
-      <div class="text-xs font-bold text-neutral-400 mb-3">技能方格列表</div>
-      <div id="weapon-grid" class="grid grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))] gap-2">
-        <!-- 武器卡片由 JS 動態注入渲染 -->
+      <div class="text-xs font-bold text-neutral-400 mb-3">風險管理專業核心（共 10 門）</div>
+      <div id="weapon-grid" class="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2.5">
+        <!-- 課程卡片由 JS 動態注入 -->
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = 'END_WEAPON_PLANNER_DATA';
+    const STORAGE_KEY = 'RM_COURSE_PLANNER_DATA';
 
-    // 武器靜態資料庫（提取自原始碼）
-const WEAPONS = [
-      { id: 'rm_1', name: '企業風險評估', star: 6, char: '辨識' },
-      { id: 'rm_2', name: '市場流動性分析', star: 6, char: '金融' },
-      { id: 'rm_3', name: '信用違約模型', star: 6, char: '模型' },
-      { id: 'rm_4', name: '操作風險稽核', star: 6, char: '內控' },
-      { id: 'rm_5', name: '資產負債管理', star: 6, char: '財務' },
-      { id: 'rm_6', name: '壓力測試實務', star: 6, char: '情境' },
-      { id: 'rm_7', name: '供應鏈中斷應對', star: 6, char: '營運' },
-      { id: 'rm_8', name: '資安與資料治理', star: 6, char: '科技' },
-      { id: 'rm_9', name: 'ESG與氣候風險', star: 6, char: '永續' },
-      { id: 'rm_10', name: '危機決策與處置', star: 6, char: '決策' }
+    // 10 門 6 星風險管理課程
+    const COURSES = [
+      { id: 'rm_1', name: '企業風險評估', star: 6, tag: '辨識' },
+      { id: 'rm_2', name: '市場流動性分析', star: 6, tag: '金融' },
+      { id: 'rm_3', name: '信用違約模型', star: 6, tag: '量化' },
+      { id: 'rm_4', name: '操作風險稽核', star: 6, tag: '內控' },
+      { id: 'rm_5', name: '資產負債管理', star: 6, tag: '財務' },
+      { id: 'rm_6', name: '壓力測試實務', star: 6, tag: '情境' },
+      { id: 'rm_7', name: '供應鏈中斷應對', star: 6, tag: '營運' },
+      { id: 'rm_8', name: '資安與資料治理', star: 6, tag: '科技' },
+      { id: 'rm_9', name: 'ESG與氣候風險', star: 6, tag: '永續' },
+      { id: 'rm_10', name: '危機決策與處置', star: 6, tag: '防禦' }
     ];
 
-    // 從 LocalStorage 載入已選武器清單（存武器名稱）
-    let selectedWeapons = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    // 從 LocalStorage 載入資料
+    let selectedCourses = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-    // 渲染函式
+    // 依照選取的「數量」產生對應句子與邊框顏色
+    function getAssessment(count) {
+      if (count === 0) {
+        return {
+          theme: 'bg-neutral-900/60 border-neutral-800 text-neutral-400',
+          title: '尚未配置任何風控能力',
+          desc: '請點選下方課程方格，開始建構你的組織風險防禦架構。'
+        };
+      } else if (count >= 1 && count <= 3) {
+        return {
+          theme: 'bg-amber-950/20 border-amber-800/50 text-amber-300',
+          title: `基礎防護階段（已選 ${count} 門）`,
+          desc: '已具備基本風險警覺，但防禦覆蓋面偏窄，面對複合型系統性風險可能產生結構性盲點。'
+        };
+      } else if (count >= 4 && count <= 6) {
+        return {
+          theme: 'bg-blue-950/20 border-blue-800/50 text-blue-300',
+          title: `中階合規架構（已選 ${count} 門）`,
+          desc: '已覆蓋主要營運與財務指標，能應付常態性市場波動，建議補強科技與新興情境壓力測試。'
+        };
+      } else if (count >= 7 && count <= 9) {
+        return {
+          theme: 'bg-indigo-950/20 border-indigo-700/60 text-indigo-300',
+          title: `進階韌性體系（已選 ${count} 門）`,
+          desc: '具備高度前瞻與綜合防護力，各維度風控機制完整串聯，足以因應多數突發危機。'
+        };
+      } else {
+        return {
+          theme: 'bg-emerald-950/30 border-emerald-500/60 text-emerald-300',
+          title: '全方位卓越矩陣（已選滿 10 門）',
+          desc: '達成極限全維度覆蓋！從量化模型到危機處置形成完整閉環，展現頂級風險治理成熟度。'
+        };
+      }
+    }
+
     function render() {
       // 1. 同步 LocalStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedWeapons));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedCourses));
+      const count = selectedCourses.length;
 
-      // 2. 渲染頂部已選武器橫條
+      // 2. 渲染依數量變化的評語方框
+      const assessment = getAssessment(count);
+      const commentBox = document.getElementById('status-comment-box');
+      commentBox.className = `p-3 rounded-lg border text-xs transition-all duration-300 ${assessment.theme}`;
+      commentBox.innerHTML = `
+        <div class="font-bold text-sm mb-0.5">${assessment.title}</div>
+        <div class="opacity-90 leading-relaxed">${assessment.desc}</div>
+      `;
+
+      // 3. 渲染頂部已選項目清單
       const bar = document.getElementById('weapon-display-bar');
-      if (selectedWeapons.length > 0) {
+      if (count > 0) {
         bar.innerHTML = `
-          <span>已選武器: [ ${selectedWeapons.map(name => `
+          <span>已選模組: [ ${selectedCourses.map(name => `
             <span class="inline-flex items-center gap-1">
               <strong class="text-amber-400 font-semibold">${name}</strong>
-              <button onclick="toggleWeapon('${name}')" class="text-neutral-500 hover:text-rose-400 cursor-pointer">✕</button>
+              <button onclick="toggleCourse('${name}')" class="text-neutral-500 hover:text-rose-400 cursor-pointer">✕</button>
             </span>
           `).join(', ')} ]</span>
         `;
       } else {
-        bar.innerHTML = '<span class="text-neutral-500 italic">尚未選取任何武器</span>';
+        bar.innerHTML = '<span class="text-neutral-500 italic">尚未配置課程</span>';
       }
 
-      // 3. 渲染網格按鈕
+      // 4. 渲染 10 個課程方格
       const grid = document.getElementById('weapon-grid');
-      grid.innerHTML = WEAPONS.map(wpn => {
-        const isSelected = selectedWeapons.includes(wpn.name);
+      grid.innerHTML = COURSES.map(course => {
+        const isSelected = selectedCourses.includes(course.name);
 
-        // 未選中樣式 vs 原版金黃色高亮選中樣式
+        // 選中：金黃外框與陰影；未選中：暗色框
         const btnClass = isSelected
-          ? 'border-amber-400 shadow-2xl ring-2 ring-amber-400/50 ring-offset-2 ring-offset-neutral-950'
-          : 'border-neutral-800 hover:ring-2 hover:ring-white/40';
+          ? 'border-amber-400 shadow-xl ring-2 ring-amber-400/50 ring-offset-2 ring-offset-neutral-950'
+          : 'border-neutral-800 hover:ring-2 hover:ring-neutral-600';
 
-        // 右上角打勾圖示
+        // 右上角打勾標籤
         const checkBadge = isSelected ? `
-          <div class="absolute top-2 right-2 size-6 rounded-full flex items-center justify-center z-30 shadow-md bg-amber-400 text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
-          </div>
-        ` : '';
-
-        // 星級色條底圖（6星金、5星紫）
-        const bandBg = wpn.star === 6 ? 'bg-amber-600/30' : 'bg-purple-600/30';
-
-        // 專屬角色頭像標記
-        const charBadge = wpn.char ? `
-          <div class="absolute top-2 left-2 flex gap-1 z-20">
-            <div class="size-7 rounded-full bg-neutral-900/80 border border-white/35 shadow-md flex items-center justify-center text-[10px] text-white">
-              ${wpn.char.substring(0, 2)}
-            </div>
+          <div class="absolute top-2 right-2 size-5 rounded-full flex items-center justify-center z-30 shadow bg-amber-400 text-black">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
           </div>
         ` : '';
 
         return `
           <div class="flex flex-col gap-0.5">
-            <button type="button" onclick="toggleWeapon('${wpn.name}')" 
-              class="relative flex items-center justify-center aspect-square w-full rounded-lg border cursor-pointer overflow-hidden transition-all select-none bg-neutral-900 ${btnClass}">
+            <button type="button" onclick="toggleCourse('${course.name}')" 
+              class="relative flex flex-col items-center justify-between aspect-square w-full rounded-lg border cursor-pointer overflow-hidden transition-all select-none bg-neutral-900 p-2 ${btnClass}">
               
-              <!-- 武器中央文字代碼 -->
-              <div class="absolute inset-0 flex items-center justify-center">
-                <span class="text-xs text-neutral-500 font-bold text-center px-1">${wpn.name}</span>
+              <!-- 左上角領域小標籤 -->
+              <div class="self-start">
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300 font-medium">${course.tag}</span>
               </div>
 
-              <!-- 角色左上標籤 -->
-              ${charBadge}
-
-              <!-- 右上選取打勾標誌 -->
+              <!-- 右上勾選標記 -->
               ${checkBadge}
 
-              <!-- 底部名稱條 -->
-              <div class="absolute bottom-0 inset-x-0 z-20 py-1 px-1 text-center ${bandBg}">
-                <p class="text-xs font-medium text-neutral-100 truncate">${wpn.name}</p>
+              <!-- 中央 6 星標記與圖示 -->
+              <div class="flex flex-col items-center justify-center my-auto">
+                <span class="text-amber-400 text-xs tracking-tighter">★★★★★★</span>
+                <span class="text-xs text-neutral-200 font-bold mt-1 text-center leading-tight px-1">${course.name}</span>
+              </div>
+
+              <!-- 底部 6 星金黃底條 -->
+              <div class="w-full py-0.5 text-center bg-amber-500/20 border-t border-amber-500/30 rounded-b">
+                <p class="text-[10px] font-semibold text-amber-300">Level 6 核心</p>
               </div>
             </button>
           </div>
@@ -138,24 +171,23 @@ const WEAPONS = [
       }).join('');
     }
 
-    // 切換武器選取狀態
-    function toggleWeapon(name) {
-      const idx = selectedWeapons.indexOf(name);
+    // 點選切換
+    function toggleCourse(name) {
+      const idx = selectedCourses.indexOf(name);
       if (idx === -1) {
-        selectedWeapons.push(name); // 累加並發光
+        selectedCourses.push(name);
       } else {
-        selectedWeapons.splice(idx, 1); // 再次點擊取消
+        selectedCourses.splice(idx, 1);
       }
       render();
     }
 
-    // 清空全部
+    // 清空
     function clearAll() {
-      selectedWeapons = [];
+      selectedCourses = [];
       render();
     }
 
-    // 初次載入渲染
     render();
   </script>
 </body>
