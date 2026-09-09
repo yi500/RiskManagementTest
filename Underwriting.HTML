@@ -44,14 +44,15 @@
   <script>
     const STORAGE_KEY = 'RM_COURSE_PLANNER_DATA';
 
-    // 定義各星級對應的分數權重（可依需求調整）
+    // 1. 定義星級對應的分數規則
     const STAR_POINTS = {
       6: 10, // 6 星 = 10 分
       5: 7,  // 5 星 = 7 分
-      4: 4   // 4 星 = 4 分
+      4: 4,  // 4 星 = 4 分
+      3: 2   // 3 星 = 2 分
     };
 
-    // 10 門核保理賠課程（支援不同星數配置）
+    // 2. 當前頁面的 10 門課程
     const COURSES = [
       { id: 'uc_1', name: '保險核保實務', star: 6, tag: '核保' },
       { id: 'uc_2', name: '風險辨識與承保判斷', star: 6, tag: '判斷' },
@@ -65,9 +66,36 @@
       { id: 'uc_10', name: '核保理賠綜合決策實務', star: 6, tag: '決策' }
     ];
 
+    // 3. 全局星級對照表（確保無論哪個頁面存進去的課程，都能查到星級）
+    const ALL_COURSES_LOOKUP = {
+      // 本頁核保理賠模組
+      '保險核保實務': 6,
+      '風險辨識與承保判斷': 6,
+      '保險條款與責任分析': 6,
+      '理賠案件審查實務': 6,
+      '理賠調查與證據判讀': 6,
+      '損失評估與理賠決策': 6,
+      '詐欺識別與異常案件分析': 6,
+      '核保理賠法遵與爭議處理': 6,
+      '複雜案件風險與責任判斷': 6,
+      '核保理賠綜合決策實務': 6,
+
+      // 風險管理模組（跨模組加入）
+      '企業風險評估': 6,
+      '市場流動性分析': 6,
+      '信用違約模型': 6,
+      '操作風險稽核': 6,
+      '資產負債管理': 6,
+      '壓力測試實務': 6,
+      '供應鏈中斷應對': 6,
+      '資安與資料治理': 6,
+      'ESG與氣候風險': 6,
+      '危機決策與處置': 6
+    };
+
     let selectedCourses = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-    // 依據「總分」與「門數」評定成熟度等級
+    // 根據門數與分數計算評語
     function getAssessment(count, totalScore) {
       if (count === 0) {
         return {
@@ -107,16 +135,15 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedCourses));
       const count = selectedCourses.length;
 
-      // 2. 計算總分數：遍歷已選課程，加總對應星級分數
+      // 2. 核心計算：遍歷橫條出現的每一個項目，查表加總分數
       let totalScore = 0;
       selectedCourses.forEach(courseName => {
-        const course = COURSES.find(c => c.name === courseName);
-        if (course) {
-          totalScore += STAR_POINTS[course.star] || 0;
-        }
+        // 先查全局表，若沒有則預設 6 星
+        const stars = ALL_COURSES_LOOKUP[courseName] || 6;
+        totalScore += (STAR_POINTS[stars] || 0);
       });
 
-      // 3. 渲染動態評語與積分盒子
+      // 3. 渲染狀態評語方框
       const assessment = getAssessment(count, totalScore);
       const commentBox = document.getElementById('status-comment-box');
       commentBox.className = `p-3 rounded-lg border text-xs transition-all duration-300 ${assessment.theme}`;
@@ -130,22 +157,27 @@
         <div class="opacity-90 leading-relaxed">${assessment.desc}</div>
       `;
 
-      // 4. 渲染頂部已選模組橫條
+      // 4. 渲染頂部已選模組橫條（附帶顯示該項目的星級與分數）
       const bar = document.getElementById('weapon-display-bar');
       if (count > 0) {
         bar.innerHTML = `
-          <span>已選模組: [ ${selectedCourses.map(name => `
-            <span class="inline-flex items-center gap-1">
-              <strong class="text-amber-400 font-semibold">${name}</strong>
-              <button onclick="toggleCourse('${name}')" class="text-neutral-500 hover:text-rose-400 cursor-pointer font-bold">✕</button>
-            </span>
-          `).join(', ')} ]</span>
+          <span>已選模組: [ ${selectedCourses.map(name => {
+            const stars = ALL_COURSES_LOOKUP[name] || 6;
+            const pts = STAR_POINTS[stars] || 0;
+            return `
+              <span class="inline-flex items-center gap-1">
+                <strong class="text-amber-400 font-semibold">${name}</strong>
+                <span class="text-[10px] text-amber-500/80 font-mono">(${stars}★/+${pts})</span>
+                <button onclick="toggleCourse('${name}')" class="text-neutral-500 hover:text-rose-400 cursor-pointer font-bold ml-0.5">✕</button>
+              </span>
+            `;
+          }).join(', ')} ]</span>
         `;
       } else {
         bar.innerHTML = '<span class="text-neutral-500 italic">尚未配置課程</span>';
       }
 
-      // 5. 渲染課程卡片（星號與等級標籤隨 star 屬性動態變化）
+      // 5. 渲染下方 10 格卡片
       const grid = document.getElementById('weapon-grid');
       grid.innerHTML = COURSES.map(course => {
         const isSelected = selectedCourses.includes(course.name);
@@ -162,19 +194,16 @@
             <button type="button" onclick="toggleCourse('${course.name}')" 
               class="relative flex flex-col items-center justify-between aspect-square w-full rounded-lg border cursor-pointer overflow-hidden transition-all select-none p-2 ${btnClass}">
               
-              <!-- 左上領域標籤與分數 -->
               <div class="w-full flex justify-between items-center">
                 <span class="text-[10px] px-1.5 py-0.5 rounded ${isSelected ? 'bg-amber-500/20 text-amber-300' : 'bg-neutral-800 text-neutral-300'} font-medium">${course.tag}</span>
                 <span class="text-[10px] font-mono opacity-60">+${score}分</span>
               </div>
 
-              <!-- 中央星級與名稱 -->
               <div class="flex flex-col items-center justify-center my-auto">
                 <span class="text-amber-400 text-xs tracking-tighter">${starStr}</span>
                 <span class="text-xs ${isSelected ? 'text-amber-200' : 'text-neutral-200'} font-bold mt-1 text-center leading-tight px-1">${course.name}</span>
               </div>
 
-              <!-- 底部星級底條 -->
               <div class="w-full py-0.5 text-center ${isSelected ? 'bg-amber-500/30 border-amber-400/40 text-amber-300' : 'bg-amber-500/10 border-amber-500/20 text-neutral-400'} border-t rounded-b">
                 <p class="text-[10px] font-semibold">Level ${starCount} 核心</p>
               </div>
