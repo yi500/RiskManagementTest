@@ -43,7 +43,15 @@
 
   <script>
     const STORAGE_KEY = 'RM_COURSE_PLANNER_DATA';
-    // 10 門 6 星核保理賠能力課程
+
+    // 定義各星級對應的分數權重（可依需求調整）
+    const STAR_POINTS = {
+      6: 10, // 6 星 = 10 分
+      5: 7,  // 5 星 = 7 分
+      4: 4   // 4 星 = 4 分
+    };
+
+    // 10 門核保理賠課程（支援不同星數配置）
     const COURSES = [
       { id: 'uc_1', name: '保險核保實務', star: 6, tag: '核保' },
       { id: 'uc_2', name: '風險辨識與承保判斷', star: 6, tag: '判斷' },
@@ -57,40 +65,39 @@
       { id: 'uc_10', name: '核保理賠綜合決策實務', star: 6, tag: '決策' }
     ];
 
-    // 從 LocalStorage 載入資料
     let selectedCourses = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-    // 依照選取的「數量」產生對應句子與邊框顏色
-    function getAssessment(count) {
+    // 依據「總分」與「門數」評定成熟度等級
+    function getAssessment(count, totalScore) {
       if (count === 0) {
         return {
           theme: 'bg-neutral-900/60 border-neutral-800 text-neutral-400',
-          title: '尚未配置任何風控能力',
-          desc: '請點選下方課程方格，開始建構你的組織風險防禦架構。'
+          title: '尚未配置任何職能',
+          desc: '請由下方點選課程方格，開始累積專業核保理賠戰力積分。'
         };
-      } else if (count >= 1 && count <= 3) {
+      } else if (totalScore < 30) {
         return {
           theme: 'bg-amber-950/20 border-amber-800/50 text-amber-300',
-          title: `基礎防護階段（已選 ${count} 門）`,
-          desc: '已具備基本風險警覺，但防禦覆蓋面偏窄，面對複合型系統性風險可能產生結構性盲點。'
+          title: `基礎審查資質（已選 ${count} 門 · 總分 ${totalScore} 分）`,
+          desc: '具備基層案件常規判讀與審查意識，但關鍵高階決策職能佔比仍低，面對疑難爭議案件建議轉交資深人員協同覆核。'
         };
-      } else if (count >= 4 && count <= 6) {
+      } else if (totalScore < 60) {
         return {
           theme: 'bg-blue-950/20 border-blue-800/50 text-blue-300',
-          title: `中階合規架構（已選 ${count} 門）`,
-          desc: '已覆蓋主要營運與財務指標，能應付常態性市場波動，建議補強科技與新興情境壓力測試。'
+          title: `中階專業架構（已選 ${count} 門 · 總分 ${totalScore} 分）`,
+          desc: '已具備完整之常態案件調查與契約判讀能力，能獨立處置大部分爭端，建議補強防詐分析與複合巨災風險評估。'
         };
-      } else if (count >= 7 && count <= 9) {
+      } else if (totalScore < 90) {
         return {
           theme: 'bg-indigo-950/20 border-indigo-700/60 text-indigo-300',
-          title: `進階韌性體系（已選 ${count} 門）`,
-          desc: '具備高度前瞻與綜合防護力，各維度風控機制完整串聯，足以因應多數突發危機。'
+          title: `資深核賠專家（已選 ${count} 門 · 總分 ${totalScore} 分）`,
+          desc: '專業積分深厚！兼具條款深度與複雜決策視角，各項風控機制緊密串聯，足以承擔重大賠案與高額承保決策。'
         };
       } else {
         return {
           theme: 'bg-emerald-950/30 border-emerald-500/60 text-emerald-300',
-          title: '全方位卓越矩陣（已選滿 10 門）',
-          desc: '達成極限全維度覆蓋！從量化模型到危機處置形成完整閉環，展現頂級風險治理成熟度。'
+          title: `全維度卓越領航（已選 ${count} 門 · 總分 ${totalScore} 分）`,
+          desc: '積分封頂！達成跨領域高階核保理賠完整閉環，兼備精準定價、逆選擇防弊與爭議處置能力，展現最高規格專業成熟度。'
         };
       }
     }
@@ -100,23 +107,37 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedCourses));
       const count = selectedCourses.length;
 
-      // 2. 渲染依數量變化的評語方框
-      const assessment = getAssessment(count);
+      // 2. 計算總分數：遍歷已選課程，加總對應星級分數
+      let totalScore = 0;
+      selectedCourses.forEach(courseName => {
+        const course = COURSES.find(c => c.name === courseName);
+        if (course) {
+          totalScore += STAR_POINTS[course.star] || 0;
+        }
+      });
+
+      // 3. 渲染動態評語與積分盒子
+      const assessment = getAssessment(count, totalScore);
       const commentBox = document.getElementById('status-comment-box');
       commentBox.className = `p-3 rounded-lg border text-xs transition-all duration-300 ${assessment.theme}`;
       commentBox.innerHTML = `
-        <div class="font-bold text-sm mb-0.5">${assessment.title}</div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="font-bold text-sm">${assessment.title}</span>
+          <span class="px-2 py-0.5 rounded bg-white/10 font-mono font-bold text-xs tracking-wide">
+            得分：${totalScore}
+          </span>
+        </div>
         <div class="opacity-90 leading-relaxed">${assessment.desc}</div>
       `;
 
-      // 3. 渲染頂部已選項目清單
+      // 4. 渲染頂部已選模組橫條
       const bar = document.getElementById('weapon-display-bar');
       if (count > 0) {
         bar.innerHTML = `
           <span>已選模組: [ ${selectedCourses.map(name => `
             <span class="inline-flex items-center gap-1">
               <strong class="text-amber-400 font-semibold">${name}</strong>
-              <button onclick="toggleCourse('${name}')" class="text-neutral-500 hover:text-rose-400 cursor-pointer">✕</button>
+              <button onclick="toggleCourse('${name}')" class="text-neutral-500 hover:text-rose-400 cursor-pointer font-bold">✕</button>
             </span>
           `).join(', ')} ]</span>
         `;
@@ -124,45 +145,38 @@
         bar.innerHTML = '<span class="text-neutral-500 italic">尚未配置課程</span>';
       }
 
-      // 4. 渲染 10 個課程方格
+      // 5. 渲染課程卡片（星號與等級標籤隨 star 屬性動態變化）
       const grid = document.getElementById('weapon-grid');
       grid.innerHTML = COURSES.map(course => {
         const isSelected = selectedCourses.includes(course.name);
+        const starCount = course.star || 6;
+        const starStr = '★'.repeat(starCount);
+        const score = STAR_POINTS[starCount] || 0;
 
-        // 選中：金黃外框與陰影；未選中：暗色框
         const btnClass = isSelected
-          ? 'border-amber-400 shadow-xl ring-2 ring-amber-400/50 ring-offset-2 ring-offset-neutral-950'
-          : 'border-neutral-800 hover:ring-2 hover:ring-neutral-600';
-
-        // 右上角打勾標籤，把其中的 hidden  單字刪除，右上角打勾徽章就會立即恢復顯示。
-        const checkBadge = isSelected ? `
-          <div class="hidden absolute top-2 right-2 size-5 rounded-full flex items-center justify-center z-30 shadow bg-amber-400 text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
-          </div>
-        ` : '';
+          ? 'border-amber-400 shadow-xl ring-2 ring-amber-400/50 ring-offset-2 ring-offset-neutral-950 bg-neutral-900/90'
+          : 'border-neutral-800 hover:ring-2 hover:ring-neutral-600 bg-neutral-900';
 
         return `
           <div class="flex flex-col gap-0.5">
             <button type="button" onclick="toggleCourse('${course.name}')" 
-              class="relative flex flex-col items-center justify-between aspect-square w-full rounded-lg border cursor-pointer overflow-hidden transition-all select-none bg-neutral-900 p-2 ${btnClass}">
+              class="relative flex flex-col items-center justify-between aspect-square w-full rounded-lg border cursor-pointer overflow-hidden transition-all select-none p-2 ${btnClass}">
               
-              <!-- 左上角領域小標籤 -->
-              <div class="self-start">
-                <span class="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300 font-medium">${course.tag}</span>
+              <!-- 左上領域標籤與分數 -->
+              <div class="w-full flex justify-between items-center">
+                <span class="text-[10px] px-1.5 py-0.5 rounded ${isSelected ? 'bg-amber-500/20 text-amber-300' : 'bg-neutral-800 text-neutral-300'} font-medium">${course.tag}</span>
+                <span class="text-[10px] font-mono opacity-60">+${score}分</span>
               </div>
 
-              <!-- 右上勾選標記 -->
-              ${checkBadge}
-
-              <!-- 中央 6 星標記與圖示 -->
+              <!-- 中央星級與名稱 -->
               <div class="flex flex-col items-center justify-center my-auto">
-                <span class="text-amber-400 text-xs tracking-tighter">★★★★★★</span>
-                <span class="text-xs text-neutral-200 font-bold mt-1 text-center leading-tight px-1">${course.name}</span>
+                <span class="text-amber-400 text-xs tracking-tighter">${starStr}</span>
+                <span class="text-xs ${isSelected ? 'text-amber-200' : 'text-neutral-200'} font-bold mt-1 text-center leading-tight px-1">${course.name}</span>
               </div>
 
-              <!-- 底部 6 星金黃底條 -->
-              <div class="w-full py-0.5 text-center bg-amber-500/20 border-t border-amber-500/30 rounded-b">
-                <p class="text-[10px] font-semibold text-amber-300">Level 6 核心</p>
+              <!-- 底部星級底條 -->
+              <div class="w-full py-0.5 text-center ${isSelected ? 'bg-amber-500/30 border-amber-400/40 text-amber-300' : 'bg-amber-500/10 border-amber-500/20 text-neutral-400'} border-t rounded-b">
+                <p class="text-[10px] font-semibold">Level ${starCount} 核心</p>
               </div>
             </button>
           </div>
@@ -170,7 +184,6 @@
       }).join('');
     }
 
-    // 點選切換
     function toggleCourse(name) {
       const idx = selectedCourses.indexOf(name);
       if (idx === -1) {
@@ -181,7 +194,6 @@
       render();
     }
 
-    // 清空
     function clearAll() {
       selectedCourses = [];
       render();
