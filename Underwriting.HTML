@@ -12,7 +12,7 @@
     <!-- 頂部標題區 -->
     <div class="border-b border-neutral-800 pb-4 flex justify-between items-end">
       <div>
-        <h1 class="text-xl font-bold text-neutral-50 tracking-wider">風險管理能力規劃器</h1>
+        <h1 class="text-xl font-bold text-neutral-50 tracking-wider">核保理賠能力規劃器</h1>
         <p class="text-xs text-neutral-400 mt-1">點選課程方格進行配置，選取數量將即時評估整體防禦成熟度。</p>
       </div>
       <button onclick="clearAll()" class="text-xs text-rose-400 hover:text-rose-300 underline cursor-pointer">全部清空</button>
@@ -43,19 +43,18 @@
 
   <script>
     const STORAGE_KEY = 'RM_COURSE_PLANNER_DATA';
-
-    // 10 門 6 星風險管理課程
+    // 10 門 6 星核保理賠能力課程
     const COURSES = [
-      { id: 'rm_1', name: '企業風險評估', star: 6, tag: '辨識' },
-      { id: 'rm_2', name: '市場流動性分析', star: 6, tag: '金融' },
-      { id: 'rm_3', name: '信用違約模型', star: 6, tag: '量化' },
-      { id: 'rm_4', name: '操作風險稽核', star: 6, tag: '內控' },
-      { id: 'rm_5', name: '資產負債管理', star: 6, tag: '財務' },
-      { id: 'rm_6', name: '壓力測試實務', star: 6, tag: '情境' },
-      { id: 'rm_7', name: '供應鏈中斷應對', star: 6, tag: '營運' },
-      { id: 'rm_8', name: '資安與資料治理', star: 6, tag: '科技' },
-      { id: 'rm_9', name: 'ESG與氣候風險', star: 6, tag: '永續' },
-      { id: 'rm_10', name: '危機決策與處置', star: 6, tag: '防禦' }
+      { id: 'uc_1', name: '保險核保實務', star: 6, tag: '核保' },
+      { id: 'uc_2', name: '風險辨識與承保判斷', star: 6, tag: '判斷' },
+      { id: 'uc_3', name: '保險條款與責任分析', star: 6, tag: '條款' },
+      { id: 'uc_4', name: '理賠案件審查實務', star: 6, tag: '理賠' },
+      { id: 'uc_5', name: '理賠調查與證據判讀', star: 6, tag: '調查' },
+      { id: 'uc_6', name: '損失評估與理賠決策', star: 6, tag: '評估' },
+      { id: 'uc_7', name: '詐欺識別與異常案件分析', star: 6, tag: '防詐' },
+      { id: 'uc_8', name: '核保理賠法遵與爭議處理', star: 6, tag: '法遵' },
+      { id: 'uc_9', name: '複雜案件風險與責任判斷', star: 6, tag: '專業' },
+      { id: 'uc_10', name: '核保理賠綜合決策實務', star: 6, tag: '決策' }
     ];
 
     // 從 LocalStorage 載入資料
