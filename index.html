@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>終末地基質規劃器 - 武器選擇</title>
+  <title>風寶分類帽</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* 模擬原版暗色調背景與邊框變數 */
@@ -20,15 +20,15 @@
     <!-- 頂部標題區 -->
     <div class="border-b border-neutral-800 pb-4 flex justify-between items-end">
       <div>
-        <h1 class="text-xl font-bold text-neutral-50 tracking-wider">終末地基質規劃器</h1>
-        <p class="text-xs text-neutral-400 mt-1">點擊武器方格切換選取（已選狀態外框亮金並打勾），狀態自動儲存至 LocalStorage。</p>
+        <h1 class="text-xl font-bold text-neutral-50 tracking-wider">選哲你的學院</h1>
+        <p class="text-xs text-neutral-400 mt-1">技能方格切換選取（已選狀態外框亮金並打勾），狀態自動儲存至 LocalStorage。</p>
       </div>
       <button onclick="clearAll()" class="text-xs text-rose-400 hover:text-rose-300 underline cursor-pointer">全部清空</button>
     </div>
 
     <!-- 1. 當前已規劃結果展示橫條 -->
     <div>
-      <div class="text-xs font-medium text-neutral-400 mb-2">已選武器方案：</div>
+      <div class="text-xs font-medium text-neutral-400 mb-2">已選技能方格：</div>
       <div id="weapon-display-bar" class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-300 bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-3 min-h-[44px]">
         <!-- 動態渲染展示標籤 -->
       </div>
@@ -36,7 +36,7 @@
 
     <!-- 2. 武器九宮格選擇區 -->
     <div>
-      <div class="text-xs font-bold text-neutral-400 mb-3">武器列表</div>
+      <div class="text-xs font-bold text-neutral-400 mb-3">技能方格列表</div>
       <div id="weapon-grid" class="grid grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))] gap-2">
         <!-- 武器卡片由 JS 動態注入渲染 -->
       </div>
@@ -47,72 +47,17 @@
     const STORAGE_KEY = 'END_WEAPON_PLANNER_DATA';
 
     // 武器靜態資料庫（提取自原始碼）
-    const WEAPONS = [
-      { id: 'wpn_1', name: '点心时刻', star: 5, avatar: 'preview-2117.avif', char: '噗切娜' },
-      { id: 'wpn_2', name: '寒夜幽影', star: 6, avatar: 'chr_0034_typhoea.avif', char: '提弗洛斯', isUp: true },
-      { id: 'wpn_3', name: '黯色火炬', star: 6 },
-      { id: 'wpn_4', name: '白夜新星', star: 6 },
-      { id: 'wpn_5', name: '爆破單元', star: 6 },
-      { id: 'wpn_6', name: '不知歸', star: 6, avatar: 'chr_0029_pograni.avif', char: '骏卫' },
-      { id: 'wpn_7', name: '滄溟星夢', star: 6, avatar: 'chr_0025_ardelia.avif', char: '艾尔黛拉' },
-      { id: 'wpn_8', name: '赤纓', star: 6, avatar: 'chr_0031_mifu.avif', char: '弭弗' },
-      { id: 'wpn_9', name: '大雷斑', star: 6, avatar: 'chr_0009_azrila.avif', char: '余烬' },
-      { id: 'wpn_10', name: '燈火使命', star: 6 },
-      { id: 'wpn_11', name: '典範', star: 6, avatar: 'chr_0018_dapan.avif', char: '大潘' },
-      { id: 'wpn_12', name: '鍍紅祝福', star: 6, avatar: 'chr_0033_camille.avif', char: '卡缪' },
-      { id: 'wpn_13', name: '扶搖', star: 6, avatar: 'chr_0005_chen.avif', char: '陈千语' },
-      { id: 'wpn_14', name: '負山', star: 6, avatar: 'chr_0015_lifeng.avif', char: '黎风' },
-      { id: 'wpn_15', name: '孤舟', star: 6, avatar: 'chr_0030_zhuangfy.avif', char: '庄方宜' },
-      { id: 'wpn_16', name: '光榮記憶', star: 6 },
-      { id: 'wpn_17', name: '赫拉芬格', star: 6, avatar: 'chr_0026_lastrite.avif', char: '别礼' },
-      { id: 'wpn_18', name: '宏願', star: 6, avatar: 'chr_9000_endmin.avif', char: '管理员' },
-      { id: 'wpn_19', name: '幻想苦痛', star: 6 },
-      { id: 'wpn_20', name: '黃金時代', star: 6 },
-      { id: 'wpn_21', name: '苦難的盡頭', star: 6 },
-      { id: 'wpn_22', name: '狼之緋', star: 6, avatar: 'chr_0028_wulfa.avif', char: '洛茜' },
-      { id: 'wpn_23', name: '聯結點', star: 6 },
-      { id: 'wpn_24', name: '領航者', star: 6 },
-      { id: 'wpn_25', name: '落草', star: 6, avatar: 'chr_0027_tangtang.avif', char: '汤汤' },
-      { id: 'wpn_26', name: '破碎君王', star: 6 },
-      { id: 'wpn_27', name: '騎士精神', star: 6 },
-      { id: 'wpn_28', name: '熱熔切割器', star: 6 },
-      { id: 'wpn_29', name: '熔鑄火焰', star: 6, avatar: 'chr_0016_laevat.avif', char: '莱万汀' },
-      { id: 'wpn_30', name: '使命必達', star: 6, avatar: 'chr_0013_aglina.avif', char: '洁尔佩塔' },
-      { id: 'wpn_31', name: '四二式·肅陣', star: 6, avatar: 'chr_0032_lizhiyan.avif', char: '诀' },
-      { id: 'wpn_32', name: '同類相食', star: 6, avatar: 'chr_0006_wolfgd.avif', char: '狼卫' },
-      { id: 'wpn_33', name: '望鄉', star: 6 },
-      { id: 'wpn_34', name: '霧中微光', star: 6 },
-      { id: 'wpn_35', name: '昔日精品', star: 6 },
-      { id: 'wpn_36', name: '顯赫聲名', star: 6 },
-      { id: 'wpn_37', name: '驍勇', star: 6 },
-      { id: 'wpn_38', name: '楔子', star: 6 },
-      { id: 'wpn_39', name: '遙望', star: 6 },
-      { id: 'wpn_40', name: '曜夜的首演', star: 6, avatar: 'chr_0035_liino.avif', char: '梨诺' },
-      { id: 'wpn_41', name: '遺忘', star: 6 },
-      { id: 'wpn_42', name: '藝術暴君', star: 6, avatar: 'chr_0017_yvonne.avif', char: '伊冯' },
-      { id: 'wpn_43', name: '作品：蝕跡', star: 6 },
-      { id: 'wpn_44', name: 'J.E.T.', star: 6 },
-      { id: 'wpn_45', name: '佈道自由', star: 5 },
-      { id: 'wpn_46', name: '悼亡詩', star: 5 },
-      { id: 'wpn_47', name: '鋼鐵餘音', star: 5 },
-      { id: 'wpn_48', name: '古渠', star: 5 },
-      { id: 'wpn_49', name: '堅城鑄造者', star: 5 },
-      { id: 'wpn_50', name: '理性告別', star: 5 },
-      { id: 'wpn_51', name: '迷失荒野', star: 5 },
-      { id: 'wpn_52', name: '莫奈何', star: 5 },
-      { id: 'wpn_53', name: '嵌合正義', star: 5 },
-      { id: 'wpn_54', name: '十二問', star: 5 },
-      { id: 'wpn_55', name: '探驪', star: 5 },
-      { id: 'wpn_56', name: '向心之引', star: 5 },
-      { id: 'wpn_57', name: '仰止', star: 5 },
-      { id: 'wpn_58', name: '終點之聲', star: 5, avatar: 'chr_0014_aurora.avif', char: '昼雪' },
-      { id: 'wpn_59', name: '逐鱗3.0', star: 5 },
-      { id: 'wpn_60', name: '作品：眾生', star: 5 },
-      { id: 'wpn_61', name: 'O.B.J.尖峰', star: 5 },
-      { id: 'wpn_62', name: 'O.B.J.輕芒', star: 5 },
-      { id: 'wpn_63', name: 'O.B.J.術識', star: 5 },
-      { id: 'wpn_64', name: 'O.B.J.迅極', star: 5 },
-      { id: 'wpn_65', name: 'O.B.J.重荷', star: 5 }
+const WEAPONS = [
+      { id: 'rm_1', name: '企業風險評估', star: 6, char: '辨識' },
+      { id: 'rm_2', name: '市場流動性分析', star: 6, char: '金融' },
+      { id: 'rm_3', name: '信用違約模型', star: 6, char: '模型' },
+      { id: 'rm_4', name: '操作風險稽核', star: 6, char: '內控' },
+      { id: 'rm_5', name: '資產負債管理', star: 6, char: '財務' },
+      { id: 'rm_6', name: '壓力測試實務', star: 6, char: '情境' },
+      { id: 'rm_7', name: '供應鏈中斷應對', star: 6, char: '營運' },
+      { id: 'rm_8', name: '資安與資料治理', star: 6, char: '科技' },
+      { id: 'rm_9', name: 'ESG與氣候風險', star: 6, char: '永續' },
+      { id: 'rm_10', name: '危機決策與處置', star: 6, char: '決策' }
     ];
 
     // 從 LocalStorage 載入已選武器清單（存武器名稱）
