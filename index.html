@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>終末地基質規劃器 - 累加測試</title>
+  <!-- 引入 Tailwind CSS 確保外觀樣式一模一樣 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 p-4 md:p-8 font-sans">
+
+  <div class="max-w-4xl mx-auto space-y-6">
+    <!-- 標題與說明 -->
+    <div class="border-b border-slate-200 pb-4">
+      <h1 class="text-xl font-bold text-slate-900">基質屬性規劃面板</h1>
+      <p class="text-xs text-slate-500 mt-1">點擊下方標籤動態累加，資料自動同步至 LocalStorage，重整頁面不清除。</p>
+    </div>
+
+    <!-- 1. 當前已規劃結果展示橫條（依照你指定的樣式打造） -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-slate-600">目前選擇方案：</span>
+        <button onclick="clearAll()" class="text-xs text-rose-500 hover:underline cursor-pointer">全部清空</button>
+      </div>
+
+      <div id="attribute-bar" class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs text-slate-600 bg-slate-200/70 border border-slate-300 rounded-md px-3 py-2 min-h-[38px]">
+        <!-- 動態渲染在此 -->
+      </div>
+    </div>
+
+    <!-- 2. 點擊篩選與累加按鈕區 -->
+    <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4">
+      <!-- 基礎屬性 -->
+      <div>
+        <div class="text-xs font-bold text-slate-500 mb-2">基礎屬性</div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="toggleItem('base', '意志提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 意志提升</button>
+          <button onclick="toggleItem('base', '主能力提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 主能力提升</button>
+          <button onclick="toggleItem('base', '敏捷提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 敏捷提升</button>
+          <button onclick="toggleItem('base', '力量提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 力量提升</button>
+          <button onclick="toggleItem('base', '智識提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 智識提升</button>
+        </div>
+      </div>
+
+      <!-- 附加屬性 -->
+      <div>
+        <div class="text-xs font-bold text-slate-500 mb-2">附加屬性</div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="toggleItem('extra', '攻擊提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 攻擊提升</button>
+          <button onclick="toggleItem('extra', '暴擊率提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 暴擊率提升</button>
+          <button onclick="toggleItem('extra', '灼熱傷害提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 灼熱傷害提升</button>
+          <button onclick="toggleItem('extra', '寒冷傷害提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 寒冷傷害提升</button>
+          <button onclick="toggleItem('extra', '電磁傷害提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 電磁傷害提升</button>
+          <button onclick="toggleItem('extra', '物理傷害提升')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded border border-slate-300 cursor-pointer">+ 物理傷害提升</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 資料處理與持久化邏輯 -->
+  <script>
+    const STORAGE_KEY = 'CEP_ESSENCE_PLANNER_DATA';
+
+    // 從 LocalStorage 載入資料（若無紀錄則預設為空）
+    let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+      base: [],
+      extra: []
+    };
+
+    // 渲染函式
+    function render() {
+      // 每次變更即時寫入 LocalStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+      const container = document.getElementById('attribute-bar');
+
+      // 基礎屬性標籤處理
+      const baseHtml = state.base.length > 0
+        ? state.base.map((item, idx) => `
+            <span>
+              <strong class="text-slate-900 font-medium">${item}</strong>
+              <button onclick="removeItem('base', ${idx})" class="text-slate-400 hover:text-rose-500 ml-1 cursor-pointer font-bold">✕</button>
+              ${idx < state.base.length - 1 ? '<span class="text-slate-400">, </span>' : ''}
+            </span>
+          `).join('')
+        : '<span class="text-slate-400">未選擇</span>';
+
+      // 附加屬性標籤處理
+      const extraHtml = state.extra.length > 0
+        ? state.extra.map((item, idx) => `
+            <span>
+              <strong class="text-slate-900 font-medium">${item}</strong>
+              <button onclick="removeItem('extra', ${idx})" class="text-slate-400 hover:text-rose-500 ml-1 cursor-pointer font-bold">✕</button>
+              ${idx < state.extra.length - 1 ? '<span class="text-slate-400">, </span>' : ''}
+            </span>
+          `).join('')
+        : '<span class="text-slate-400">未選擇</span>';
+
+      // 組成與 end.canmoe 一致的排版
+      container.innerHTML = `
+        <span>基礎屬性: [ ${baseHtml} ]</span>
+        <span class="text-slate-400/50">|</span>
+        <span>附加屬性: ${extraHtml}</span>
+      `;
+    }
+
+    // 累加項目（點擊加入）
+    function toggleItem(category, name) {
+      if (!state[category].includes(name)) {
+        state[category].push(name);
+        render();
+      }
+    }
+
+    // 刪除單個項目
+    function removeItem(category, index) {
+      state[category].splice(index, 1);
+      render();
+    }
+
+    // 清空全部
+    function clearAll() {
+      state.base = [];
+      state.extra = [];
+      render();
+    }
+
+    // 初次載入渲染
+    render();
+  </script>
+</body>
+</html>
